@@ -1,4 +1,5 @@
 ﻿var serverSocket = 7175;
+var defaultFile = "Client.html";
 
 var http = require('http'),
     url = require('url'),
@@ -18,7 +19,7 @@ var server = http.createServer(function(req, res) {
     {
         var uri = url.parse(req.url).pathname;
         if(uri == "/") {
-            uri = "/Client.html";
+            uri += defaultFile;
         }
         var filename = path.join(process.cwd(), uri);
 
