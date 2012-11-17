@@ -285,7 +285,6 @@ Ball.prototype.animate = function(tick) {
     this.setMeshPosition(this.position);
 }
 Ball.prototype.collisionCheckedMove = function(move) {
-    // checks if collides with game area borders
     var p = move.position;
     var sX = this.size.x / 2;
     var sY = this.size.y / 2;
@@ -297,6 +296,7 @@ Ball.prototype.collisionCheckedMove = function(move) {
         }
     }
     this.position = move.position;
+    // checks if collides with game area borders
     if (p.y <= sY) {
         // collides lower border
         this.position.y = sY;
@@ -323,13 +323,13 @@ Ball.prototype.goal = function(player){
 }
 Ball.prototype.collidePaddle = function(move, paddle, p, sX, sY) {
     var b = false;
-    if (p.x < 100) {
+    if (paddle.position.x < 200) {
         // close to left wall
         if (p.x - sX <= paddle.position.x + paddle.size.x / 2) {
             // on paddle line
             b = true;
         }
-    } else if (p.x > this.areaSize.x - 100) {
+    } else if (paddle.position.x > this.areaSize.x - 200) {
         // right wall
         if (p.x + sX >= paddle.position.x - paddle.size.x / 2) {
             // on paddle line
