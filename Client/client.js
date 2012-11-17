@@ -1,3 +1,49 @@
+ 
+window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+if (!window.WebSocket) {
+    alert("fail"); 
+} else {
+    // open connection
+    var connection = new WebSocket('ws://127.0.0.1:7175');
+
+    setInterval(function() {
+        if (connection.readyState !== 1) {
+            alert("Connection lost"); 
+        }
+    }, 3000);
+}
+var remoteValues = {position:false,speed:false};
+  connection.onmessage = function (message) {
+
+        try {
+            var json = JSON.parse(message.data);
+        } catch (e) {
+            console.log('This doesn\'t look like a valid JSON: ', message.data);
+            return;
+        } 
+        
+        if (json.type === 'color') {  
+        // ignore
+        } else if (json.type === 'history') { 
+        // ignore
+        } else if (json.type === 'message') { // it's a single message
+            var msg = json.data.text; 
+            
+            if(msg.indexOf("**") == 0){  
+                    var n=msg.split(","); 
+                    remoteValues.position = parseFloat(n[1]);
+                    remoteValues.speed = parseFloat(n[2]);
+ 
+            }else{
+                 
+            }
+        } else {
+            console.log('Hmm..., I\'ve never seen JSON like this: ', json);
+        }
+    };
+ 
+
 //! clones an object
 function clone(obj) {
     return $.extend(true, {}, obj);
@@ -34,21 +80,28 @@ Randroller.prototype.getNewValues = function(oldValues) {
     };
 }
 LocalController.prototype = new Controller();
-function LocalController(maxSpeed) {
+function LocalController(maxSpeed, connection) {
     Controller.call(this, maxSpeed);
+    this.connection = connection;
+    this.firstMessage = true;
     this.up = 0;
     this.down = 0;
     this.dir = 0;
+    this.oldValues={
+        position : 0,
+        speed : 0
+    };
 }
 
 LocalController.prototype.getNewValues = function(oldValues) {
-    if (this.up + this.down < 2)
-        this.dir = this.up - this.down;
+
     var speed = this.dir * this.maxSpeed;
-    return {
+    var result ={
         position : oldValues.position,
         speed : speed
     };
+    this.oldValues = result;
+    return result;
 }
 
 LocalController.prototype.setKey = function(code, val) {
@@ -62,7 +115,42 @@ LocalController.prototype.setKey = function(code, val) {
             this.dir = -1;
             break;
     }
+    if (this.up + this.down < 2)
+    this.dir = this.up - this.down;
+        
+     if(this.connection && connection.readyState == 1) {
+        if(this.firstMessage){
+            var name = localStorage.getItem("name");            
+            this.connection.send(name || "error");
+            this.firstMessage = false;
+        }else{
+            var speed = this.dir * this.maxSpeed;
+            var msg = "**," + this.oldValues.position + "," + speed;
+            this.connection.send(msg);
+        }
+    }
 }
+
+RemoteController.prototype = new Controller();
+function RemoteController(maxSpeed, connection) {
+    Controller.call(this, maxSpeed);
+    this.values = false;
+ 
+    
+}
+
+RemoteController.prototype.getNewValues = function(oldValues) {
+    if(remoteValues.position) {
+    return remoteValues;
+    } else {
+      return oldValues;
+    }
+}
+
+RemoteController.prototype.setValues = function(values) {
+    this.values = values;
+}
+
 function GameArea(size) {
     this.size = size || {
         x : 700,
@@ -94,7 +182,7 @@ function GameArea(size) {
     this.mesh.position.x += this.center.x;
     this.mesh.position.y += this.center.y;
     this.scene.add(this.mesh);
-    var player = new LocalController(200);
+    var player = new LocalController(200, connection);
 
     $("body").keydown(function(e) {
         player.setKey(e.keyCode, 1);
@@ -103,6 +191,8 @@ function GameArea(size) {
     $("body").keyup(function(e) {
         player.setKey(e.keyCode, 0);
     });
+    var remotePlayer = new RemoteController(200, connection);
+
 
     // creating game objects
     var paddle1 = new Paddle({
@@ -112,7 +202,7 @@ function GameArea(size) {
     var paddle2 = new Paddle({
         x : 695,
         y : 200
-    }, new Randroller(200), this.size);
+    }, remotePlayer, this.size);
 
     var ball = new Ball(clone(this.center), this.size, [paddle1, paddle2]);
     var bSpeed = 300;
