@@ -106,11 +106,11 @@ function GameArea(size) {
 
     // creating game objects
     var paddle1 = new Paddle({
-        x : 40,
+        x : 5,
         y : 200
     }, player, this.size);
     var paddle2 = new Paddle({
-        x : 660,
+        x : 695,
         y : 200
     }, new Randroller(200), this.size);
 
@@ -315,24 +315,28 @@ Ball.prototype.collisionCheckedMove = function(move) {
 }
 Ball.prototype.goal = function(player){
     // TODO Goaaalll
-    this.position.x = p.x;
     this.speed = {
         x : 0,
         y : 0
     };
 }
 Ball.prototype.collidePaddle = function(move, paddle, p, sX, sY) {
+    if(move.speed.x == 0 && move.speed.y == 0){
+        return false;
+    }
     var b = false;
     if (paddle.position.x < 200) {
         // close to left wall
         if (p.x - sX <= paddle.position.x + paddle.size.x / 2) {
             // on paddle line
+            var collisionX = paddle.position.x + paddle.size.x / 2 + sX;
             b = true;
         }
     } else if (paddle.position.x > this.areaSize.x - 200) {
         // right wall
         if (p.x + sX >= paddle.position.x - paddle.size.x / 2) {
             // on paddle line
+            var collisionX = paddle.position.x - paddle.size.x / 2 - sX;
             b = true;
         }
     }
@@ -341,6 +345,7 @@ Ball.prototype.collidePaddle = function(move, paddle, p, sX, sY) {
         // check if y-axis hits paddle
         if ((p.y > paddle.position.y - paddle.size.y / 2) && (p.y < paddle.position.y + paddle.size.y / 2)) {
             // y-position matches
+            this.position.x = collisionX;
             this.speed.x = -this.speed.x;
             return true;
         }
