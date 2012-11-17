@@ -1,6 +1,6 @@
 # linux backups
 *~
+*.orig
 .directory
 .project
-/.project
 /Server/*.bat

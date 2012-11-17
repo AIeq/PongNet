@@ -1,5 +1,5 @@
 //! clones an object
-function clone(obj){
+function clone(obj) {
     return $.extend(true, {}, obj);
 }
 
@@ -7,28 +7,32 @@ function clone(obj){
 function Controller(maxSpeed) {
     this.maxSpeed = maxSpeed;
 }
-Controller.prototype = {
-    
-};
-Randroller.prototype = new Controller();
-function Randroller() {
 
+Randroller.prototype = new Controller();
+function Randroller(maxSpeed) {
+    Controller.call(this, maxSpeed);
 }
-Randroller.prototype = {
-    getNewValues : function(oldValues) {
-        function randomInt(range){
-            return Math.floor((Math.random()*range));
-        }
-        var speed = oldValues.speed;        
-        if(speed == 0) {
-            if(randomInt(10) == 0) speed = (randomInt(2) * 2 - 1) * this.maxSpeed;
-        } else {
-            if(randomInt(20) == 0) speed = -speed;
-            if(randomInt(80) == 0) speed = 0;
-        }
-        return {position:oldValues.position, speed:speed};
+
+Randroller.prototype.getNewValues = function(oldValues) {
+    function randomInt(range) {
+        return Math.floor((Math.random() * range));
     }
-};
+
+    var speed = oldValues.speed;
+    if (speed == 0) {
+        if (randomInt(10) == 0)
+            speed = (randomInt(2) * 2 - 1) * this.maxSpeed;
+    } else {
+        if (randomInt(20) == 0)
+            speed = -speed;
+        if (randomInt(80) == 0)
+            speed = 0;
+    }
+    return {
+        position : oldValues.position,
+        speed : speed
+    };
+}
 function GameArea(size) {
     this.size = size || {
         x : 600,
@@ -49,29 +53,26 @@ function GameArea(size) {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
     // game area
-    this.geometry = new THREE.CubeGeometry(this.size.x, this.size.y, 50);
+    this.geometry = new THREE.CubeGeometry(this.size.x, this.size.y, 70);
     this.material = new THREE.MeshBasicMaterial({
         color : 0x0000ff,
-        wireframe : true,
-        opacity : 0.5
+        wireframe : true
     });
+    this.material.side = THREE.DoubleSide;
+    
     this.mesh = new THREE.Mesh(this.geometry, this.material);
     this.mesh.position.x += this.center.x;
     this.mesh.position.y += this.center.y;
     this.scene.add(this.mesh);
 
     // game objects
-    this.gameObjects = [
-        new Paddle({
-            x : 5,
-            y : 300
-        },new Randroller(2)), 
-        new Paddle({
-            x : 595,
-            y : 200
-        },new Randroller(2)),
-        new Ball(clone(this.center))
-    ];
+    this.gameObjects = [new Paddle({
+        x : 5,
+        y : 300
+    }, new Randroller(100)), new Paddle({
+        x : 595,
+        y : 200
+    }, new Randroller(100)), new Ball(clone(this.center))];
 
     // get meshes
     for (var i = 0; i < this.gameObjects.length; ++i) {
@@ -132,6 +133,10 @@ GameObject.prototype = {
     getMesh : function() {
         return this.mesh;
     },
+    setMeshPosition : function(position) {
+        this.mesh.position.x = this.position.x;
+        this.mesh.position.y = this.position.y;
+    },
     animate : function(tick) {
         //this.position.x += this.speed.x * tick;
         //this.position.y += this.speed.y * tick;
@@ -145,7 +150,6 @@ GameObject.prototype = {
 
 Paddle.prototype = new GameObject();
 Paddle.prototype.parent = GameObject.prototype;
-Paddle.prototype.constructor = Paddle();
 function Paddle(position, controller, size) {
     GameObject.call(this);
     this.position = position;
@@ -162,6 +166,7 @@ function Paddle(position, controller, size) {
     });
 
     this.mesh = new THREE.Mesh(this.geometry, this.material);
+    this.setMeshPosition(this.position);
 }
 
 Paddle.prototype.setSize = function(size) {
@@ -169,17 +174,19 @@ Paddle.prototype.setSize = function(size) {
 }
 
 Paddle.prototype.animate = function(tick) {
-    var newValues = this.controller.getNewValues({position:this.position.y, speed:this.speed.y});
-    
+    var newValues = this.controller.getNewValues({
+        position : this.position.y,
+        speed : this.speed.y
+    });
+
     this.speed.y = newValues.speed;
-    this.position.y = newValues.position + this.speed.y * tick /1000;
+    this.position.y = newValues.position + this.speed.y * tick / 1000;
 
     this.mesh.position.y = this.position.y;
 }
 
 Ball.prototype = new GameObject();
 Ball.prototype.parent = GameObject.prototype;
-Ball.prototype.constructor = Ball();
 function Ball(position, radius) {
     GameObject.call(this);
     this.position = position;
@@ -196,6 +203,7 @@ function Ball(position, radius) {
     });
 
     this.mesh = new THREE.Mesh(this.geometry, this.material);
+    this.setMeshPosition(this.position);
 }
 
 Ball.prototype.setRadius = function(radius) {
