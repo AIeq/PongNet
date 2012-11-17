@@ -3,3 +3,4 @@
 .directory
 .project
 /.project
+/Server/*.bat
