@@ -1,0 +1,269 @@
+<!--
+  Game lobby
+  based on Node.js chat frontend and server( git://gist.github.com/2031681.git)
+
+-->
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+    <head>
+ 
+        <title>
+            TTT
+        </title>
+       <script type="text/javascript" src="jquery.js"></script> 
+       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>  
+       	<style media="screen" type="text/css">
+/* <!-- */
+body {
+	margin:0;
+	padding:0;
+}
+#header h1,
+#header h2,
+#header p {
+	margin-left:2%;
+	padding-right:2%;
+}
+#active2 #tab2,
+#active3 #tab3,
+#active4 #tab4,
+#active5 #tab5 {
+	font-weight:bold;
+	text-decoration:none;
+	color:#000;
+}
+#footer {
+	clear:both;
+	float:left;
+	width:100%;
+}
+#footer p {
+	margin-left:2%;
+	padding-right:2%;
+}
+
+/* Start of Column CSS */
+
+#container1 {
+	float:left;
+	width:100%;
+	position:relative;
+	right:50%;
+	background:#666688; /* column 1 background colour */
+}
+#container2 {
+	clear:left;
+	float:left;
+	width:100%;
+	overflow:hidden;
+	background:#BB2222; /* column 2 background colour */
+}
+#col1 {
+	float:left;
+	width:46%;
+	position:relative;
+	left:52%;
+	overflow:hidden;
+}
+#col2 {
+	float:left;
+	width:46%;
+	position:relative;
+	left:56%;
+	overflow:hidden;
+}
+/* --> */
+    </style>
+    </head>
+    <body  >
+    <div id="header">
+	 <h1>Welcome to PongNet Lobby</h1>
+ 
+</div>
+<div id="container2">
+	<div id="container1">
+		<div id="col1">
+		    <div id="chat"></div>
+            <div>
+                <span id="status">Connecting...</span>
+                <input type="text" id="input" disabled="disabled" />
+            </div>
+		</div>
+		<div id="col2">
+			<h2>Games</h2>
+            <input id="newGame" TYPE="button" style="width: 8em;"  VALUE="Create new"disabled = "disabled">
+			 <div id="games"></div>
+		</div>
+	</div>
+</div>
+<div id="footer">
+	<p>Have fun!</p>
+ </div>
+
+    
+    
+   
+<script>
+$(function () {
+    "use strict";
+
+    // for better performance - to avoid searching in DOM
+    var chatContent = $('#chat');
+    var games = $('#games');
+    var input = $('#input');
+    var newGame = $('#newGame');
+    var status = $('#status');
+ 
+
+    // my color assigned by the server
+    var myColor = false;
+    // my name sent to the server
+    var myName = false;
+
+    // if user is running mozilla then use it's built-in WebSocket
+    window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+    // if browser doesn't support WebSocket, just show some notification and exit
+    if (!window.WebSocket) {
+        chatContent.html($('<p>', { text: 'Sorry, but your browser doesn\'t '
+                                    + 'support WebSockets.'} ));
+        input.hide();
+        newGame.attr('disabled', 'disabled');
+        $('span').hide();
+        return;
+    }
+
+    // open connection
+    var connection = new WebSocket('ws://127.0.0.1:7175');
+
+    connection.onopen = function () {
+        // first we want users to enter their names
+        input.removeAttr('disabled');
+        newGame.attr('disabled', 'disabled');
+        status.text('[Login] Enter name:');
+    };
+
+    connection.onerror = function (error) {
+        // just in there were some problems with conenction...
+        chatContent.html($('<p>', { text: 'Sorry, but there\'s some problem with your '
+                                    + 'connection or the server is down.</p>' } ));
+    };
+
+    // most important part - incoming messages
+    connection.onmessage = function (message) {
+        // try to parse JSON message. Because we know that the server always returns
+        // JSON this should work without any problem but we should make sure that
+        // the massage is not chunked or otherwise damaged.
+        try {
+            var json = JSON.parse(message.data);
+        } catch (e) {
+            console.log('This doesn\'t look like a valid JSON: ', message.data);
+            return;
+        }
+
+        // NOTE: if you're not sure about the JSON structure
+        // check the server source code above
+        if (json.type === 'color') { // first response from the server with user's color
+            myColor = json.data;
+            status.text(myName + ': ').css('color', myColor);
+            input.removeAttr('disabled').focus();
+            newGame.removeAttr('disabled');
+            // from now user can start sending messages
+        } else if (json.type === 'history') { // entire message history
+            // insert every single message to the chat window
+            for (var i=0; i < json.data.length; i++) {
+                addMessage(json.data[i].author, json.data[i].text,
+                           json.data[i].color, new Date(json.data[i].time));
+            }
+        } else if (json.type === 'message') { // it's a single message
+            input.removeAttr('disabled'); // let the user write another message
+            newGame.removeAttr('disabled');
+            var msg = json.data.text;
+            if(msg.indexOf("*") == 0){
+                addGame(json.data.author, msg,
+                json.data.color, new Date(json.data.time));
+            }else{
+                addMessage(json.data.author, msg,
+                json.data.color, new Date(json.data.time));
+            }
+        } else {
+            console.log('Hmm..., I\'ve never seen JSON like this: ', json);
+        }
+    };
+
+    /**
+* Send mesage when user presses Enter key
+*/
+    input.keydown(function(e) {
+        if (e.keyCode === 13) {
+            var msg = $(this).val();
+            if (!msg) {
+                return;
+            }
+            // send the message as an ordinary text
+            connection.send(msg);
+            $(this).val('');
+            // disable the input field to make the user wait until server
+            // sends back response
+            input.attr('disabled', 'disabled');
+            newGame.attr('disabled', 'disabled');
+
+            // we know that the first message sent from a user their name
+            if (myName === false) {
+                myName = msg;
+            }
+        }
+    });
+    
+    newGame.click(function(e) { 
+            var msg = "*Game started";
+            // send the message as an ordinary text
+            connection.send(msg);
+ 
+            // disable the input field to make the user wait until server
+            // sends back response
+            input.attr('disabled', 'disabled');
+            newGame.attr('disabled', 'disabled');
+ 
+    });
+    
+
+    /**
+* This method is optional. If the server wasn't able to respond to the
+* in 3 seconds then show some error message to notify the user that
+* something is wrong.
+*/
+    setInterval(function() {
+        if (connection.readyState !== 1) {
+            status.text('Error');
+            input.attr('disabled', 'disabled').val('Unable to comminucate '
+                                                 + 'with the WebSocket server.');
+            newGame.attr('disabled', 'disabled');
+        }
+    }, 3000);
+
+    /**
+* Add message to the chat window
+*/
+    function addMessage(author, message, color, dt) {
+        chatContent.append('<span><span style="color:' + color + '">' + author + '</span> '
+             + ': ' + message + '<br/></span>');
+ 
+        while(chatContent.children().length > 10) chatContent.children("span:first").remove();
+           
+    }
+    
+   /** Add game  */
+    function addGame(author, message, color, dt) {
+
+        games.append('<span>Pong Game with <span style="color:' + color + '">' + author + '</span> '
+             + ' <input TYPE="button" style="width: 8em;"  VALUE="Join now" onClick="join()"> <br/></span>');
+ 
+        while(content.children().length > 10) content.children("span:first").remove();
+           
+    }
+});
+
+</script>
+    </body>
+</html>
