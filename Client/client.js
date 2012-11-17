@@ -42,7 +42,8 @@ function LocalController(maxSpeed) {
 }
 
 LocalController.prototype.getNewValues = function(oldValues) {
-    if(this.up + this.down < 2) this.dir = this.up - this.down;
+    if (this.up + this.down < 2)
+        this.dir = this.up - this.down;
     var speed = this.dir * this.maxSpeed;
     return {
         position : oldValues.position,
@@ -64,7 +65,7 @@ LocalController.prototype.setKey = function(code, val) {
 }
 function GameArea(size) {
     this.size = size || {
-        x : 600,
+        x : 700,
         y : 400
     };
     this.center = {};
@@ -73,10 +74,10 @@ function GameArea(size) {
 
     // camera, scene and renderer
     // camera : fov, aspect, near, far
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+    this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
     this.camera.position.x += this.center.x;
     this.camera.position.y += this.center.y;
-    this.camera.position.z = 300;
+    this.camera.position.z = 500;
     this.scene = new THREE.Scene();
     this.renderer = new THREE.CanvasRenderer();
     this.renderer.setSize(window.innerWidth - 20, window.innerHeight - 20);
@@ -105,11 +106,11 @@ function GameArea(size) {
 
     // creating game objects
     var paddle1 = new Paddle({
-        x : 5,
+        x : 40,
         y : 200
     }, player, this.size);
     var paddle2 = new Paddle({
-        x : 595,
+        x : 660,
         y : 200
     }, new Randroller(200), this.size);
 
@@ -300,22 +301,22 @@ Ball.prototype.collisionCheckedMove = function(move) {
         // collides lower border
         this.position.y = sY;
         this.speed.y = -this.speed.y;
-    } else if (p.x <= sX) {
+    } else if (p.x <= 0) {
         // collides left border
         // TODO Goaaalll
-        //this.position.x = -10;
+        this.position.x = p.x;
         this.speed = {
             x : 0,
             y : 0
         };
-    } else if (p.y >= this.areaSize.y - sY) {
+    } else if (p.y + sY >= this.areaSize.y) {
         // collides upper border
         this.position.y = this.areaSize.y - sX;
         this.speed.y = -this.speed.y;
-    } else if (p.x >= this.areaSize.x - sX) {
+    } else if (p.x >= this.areaSize.x) {
         // collides right border
         // TODO Goaaalll
-        //this.position.x = this.areaSize.x + 10;
+        this.position.x = p.x;
         this.speed = {
             x : 0,
             y : 0
@@ -327,22 +328,25 @@ Ball.prototype.collisionCheckedMove = function(move) {
 
 Ball.prototype.collidePaddle = function(move, paddle, p, sX, sY) {
     var b = false;
-    if (p.x < 20) {
+    if (p.x < 100) {
+        // close to left wall
         if (p.x - sX <= paddle.position.x + paddle.size.x / 2) {
+            // on paddle line
             b = true;
         }
-    }
-    if (p.x > this.areaSize.x - 20) {
+    } else if (p.x > this.areaSize.x - 100) {
+        // right wall
         if (p.x + sX >= paddle.position.x - paddle.size.x / 2) {
+            // on paddle line
             b = true;
         }
     }
 
     if (b) {
+        // check if y-axis hits paddle
         if ((p.y > paddle.position.y - paddle.size.y / 2) && (p.y < paddle.position.y + paddle.size.y / 2)) {
             // y-position matches
-            this.speed.x = -this.speed.x * 2;
-            this.speed.y *= 2;
+            this.speed.x = -this.speed.x;
             return true;
         }
     }
