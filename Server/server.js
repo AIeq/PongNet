@@ -2,7 +2,7 @@
 process.title = 'PongNet';
  
 var serverSocket = 7175;
-var defaultFile = "Client.html";
+var defaultFile = "Lobby.html";
 // latest 100 messages
 var history = [ ];
 // list of currently connected clients (users)

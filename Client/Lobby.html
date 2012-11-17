@@ -8,7 +8,7 @@
     <head>
  
         <title>
-            TTT
+            Lobby
         </title>
        <script type="text/javascript" src="jquery.js"></script> 
        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>  
@@ -83,7 +83,10 @@ body {
 <div id="container2">
 	<div id="container1">
 		<div id="col1">
-		    <div id="chat"></div>
+		    <div id="chat">
+            <span><br/></span><span><br/></span><span><br/></span><span><br/></span><span><br/></span>
+            <span><br/></span><span><br/></span><span><br/></span><span><br/></span><span><br/></span>
+            </div>
             <div>
                 <span id="status">Connecting...</span>
                 <input type="text" id="input" disabled="disabled" />
@@ -172,16 +175,19 @@ $(function () {
         } else if (json.type === 'history') { // entire message history
             // insert every single message to the chat window
             for (var i=0; i < json.data.length; i++) {
-                addMessage(json.data[i].author, json.data[i].text,
-                           json.data[i].color, new Date(json.data[i].time));
+                    if(msg.indexOf("*") != 0){
+                        addMessage(json.data[i].author, json.data[i].text,
+                                   json.data[i].color, new Date(json.data[i].time));
+                    }
             }
         } else if (json.type === 'message') { // it's a single message
             input.removeAttr('disabled'); // let the user write another message
             newGame.removeAttr('disabled');
             var msg = json.data.text;
+            var id = Math.floor((Math.random() * 65535))
             if(msg.indexOf("*") == 0){
                 addGame(json.data.author, msg,
-                json.data.color, new Date(json.data.time));
+                json.data.color, id);
             }else{
                 addMessage(json.data.author, msg,
                 json.data.color, new Date(json.data.time));
@@ -254,16 +260,21 @@ $(function () {
     }
     
    /** Add game  */
-    function addGame(author, message, color, dt) {
+    function addGame(author, message, color, id) {
 
         games.append('<span>Pong Game with <span style="color:' + color + '">' + author + '</span> '
-             + ' <input TYPE="button" style="width: 8em;"  VALUE="Join now" onClick="join()"> <br/></span>');
+             + ' <input TYPE="button" style="width: 8em;"  VALUE="Join now" onClick="join('+id+')"> <br/></span>');
  
-        while(content.children().length > 10) content.children("span:first").remove();
+        while(games.children().length > 5) games.children("span:first").remove();
            
     }
+    
+    
 });
-
+function join(id){
+        var newUrl = "Client.html?id=" + id;
+        window.location.replace(newUrl);
+    }
 </script>
     </body>
 </html>
