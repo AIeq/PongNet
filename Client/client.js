@@ -9,8 +9,9 @@ function GameArea(size) {
 	};
 
 	// camera, scene and renderer
-	this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
-	this.camera.position.z = 1000;
+	// camera : fov, aspect, near, far
+	this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+	this.camera.position.z = 300;
 	this.scene = new THREE.Scene();
 	this.renderer = new THREE.CanvasRenderer();
 	this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -32,6 +33,7 @@ function GameArea(size) {
 		x : 595,
 		y : 200
 	}), new Ball()];
+
 	// get meshes
 	for (var i = 0; i < this.gameObjects.length; ++i) {
 		this.scene.add(this.gameObjects[i].getMesh());
@@ -39,10 +41,18 @@ function GameArea(size) {
 }
 
 GameArea.prototype = {
-	animate : function(tick) {
+	animate : function(time) {
+		if (this.lastTime) {
+			var tick = time - this.lastTime;
+		} else {
+			var tick = 0;
+		}
+		this.lastTime = time;
+		
+		
 		self = this;
-		requestAnimationFrame(function(tick) {
-			self.animate(tick);
+		requestAnimationFrame(function(t) {
+			self.animate(t);
 		});
 
 		for (var i = 0; i < this.gameObjects.length; ++i) {
@@ -96,13 +106,15 @@ GameObject.prototype = {
 };
 
 Paddle.prototype = new GameObject();
+Paddle.prototype.parent = GameObject.prototype;
 Paddle.prototype.constructor = Paddle();
 function Paddle(position, controller, size) {
+	GameObject.call(this);
 	this.position = position;
 	this.controller = controller;
 	this.size = size || {
-		x : 10,
-		y : 50
+		x : 20,
+		y : 100
 	};
 
 	this.geometry = new THREE.CubeGeometry(this.size.x, this.size.y, this.size.x);
@@ -119,16 +131,14 @@ Paddle.prototype.setSize = function(size) {
 }
 
 Ball.prototype = new GameObject();
+Ball.prototype.parent = GameObject.prototype;
 Ball.prototype.constructor = Ball();
 function Ball(radius) {
-	var r = 2 || radius;
+	GameObject.call(this);
+	var r = 5 || radius;
 	this.size = {
 		x : r,
 		y : r
-	};
-	this.position = {
-		x : 0,
-		y : 0
 	};
 
 	this.geometry = new THREE.CubeGeometry(r, r, r);
@@ -145,9 +155,10 @@ Ball.prototype.setRadius = function(radius) {
 	this.size.y = radius;
 }
 Ball.prototype.animate = function(tick) {
-	this.mesh.rotation.x += 0.01;
-	this.mesh.rotation.y += 0.02;
+	this.mesh.rotation.x += 0.005 * tick;
+	this.mesh.rotation.y += 0.01 * tick;
 }
+
 function init() {
 
 	var canvas = document.createElement("canvas");
@@ -162,5 +173,5 @@ function init() {
 	var gameArea = new GameArea();
 
 	document.body.appendChild(gameArea.renderer.domElement);
-	gameArea.animate();
+	gameArea.animate(0);
 }
