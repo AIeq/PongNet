@@ -1,4 +1,4 @@
-﻿var serverSocket = 7175;
+var serverSocket = 7175;
 var defaultFile = "Client.html";
 
 var http = require('http'),
@@ -45,10 +45,10 @@ var server = http.createServer(function(req, res) {
     {
         console.log("Fatal error: " + err);
         res.writeHead(505, {'Content-Type': 'text/plain'});
-        res.write('505 Internal server Error\n');
+        res.write('505 - Internal Server Error\n');
         res.end();
         return;
     }   
 });
 server.listen(serverSocket);
-console.log('Server running at http://127.0.0.1:'+serverSocket+'/');
+console.log('File server running at http://127.0.0.1:'+serverSocket+'/');
