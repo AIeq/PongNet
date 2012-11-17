@@ -1,6 +1,31 @@
 ﻿//var gameArea;
 
 // data types
+function Controller(maxSpeed) {
+    this.maxSpeed = maxSpeed;
+}
+Controller.prototype = {
+    
+};
+Randroller.prototype = new Controller();
+function Randroller() {
+
+}
+Randroller.prototype = {
+    getNewValues : function(oldValues) {
+        function randomInt(range){
+            return Math.floor((Math.random()*range));
+        }
+        var speed = oldValues.speed;        
+        if(speed == 0) {
+            if(randomInt(10) == 0) speed = (randomInt(2) * 2 - 1) * this.maxSpeed;
+        } else {
+            if(randomInt(20) == 0) speed = -speed;
+            if(randomInt(80) == 0) speed = 0;
+        }
+        return {position:oldValues.position, speed:speed};
+    }
+};
 
 function GameArea(size) {
     this.size = size || {
@@ -26,13 +51,17 @@ function GameArea(size) {
     this.scene.add(this.mesh);
 
     // game objects
-    this.gameObjects = [new Paddle({
-        x : 5,
-        y : 300
-    }), new Paddle({
-        x : 595,
-        y : 200
-    }), new Ball()];
+    this.gameObjects = [
+        new Paddle({
+            x : 5,
+            y : 300
+        },new Randroller(2)), 
+        new Paddle({
+            x : 595,
+            y : 200
+        },new Randroller(2)),
+        new Ball()
+    ];
 
     // get meshes
     for (var i = 0; i < this.gameObjects.length; ++i) {
@@ -127,6 +156,15 @@ function Paddle(position, controller, size) {
 
 Paddle.prototype.setSize = function(size) {
     this.size = size;
+}
+
+Paddle.prototype.animate = function(tick) {
+    var newValues = this.controller.getNewValues({position:this.position.y, speed:this.speed.y});
+    
+    this.speed.y = newValues.speed;
+    this.position.y = newValues.position + this.speed.y * tick /1000;
+
+    this.mesh.position.y = this.position.y;
 }
 
 Ball.prototype = new GameObject();
