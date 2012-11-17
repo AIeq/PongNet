@@ -88,7 +88,8 @@ body {
             <span><br/></span><span><br/></span><span><br/></span><span><br/></span><span><br/></span>
             </div>
             <div>
-                <span id="status">Connecting...</span>
+                <span id="status" style = "background:#ffffff;">Connecting...</span>
+                <span id="nameField"> </span>
                 <input type="text" id="input" disabled="disabled" />
             </div>
 		</div>
@@ -104,18 +105,8 @@ body {
  </div>
 
     
-    
-   <script type="text/javascript" src="messaging.js"></script> 
    <script type="text/javascript" src="lobby.js"></script> 
    
-    <script>
-
-    function join(id){
-            var newUrl = "Client.html?id=" + id;
-            window.location.replace(newUrl);
-        }
-        
-           
-    </script>
+ 
     </body>
 </html>

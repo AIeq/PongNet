@@ -1,20 +1,6 @@
 $(function () {
     "use strict";
 
-    // for better performance - to avoid searching in DOM
-    var chatContent = $('#chat');
-    var games = $('#games');
-    var input = $('#input');
-    var newGame = $('#newGame');
-    var status = $('#status');
- 
-
-    // my color assigned by the server
-    var myColor = false;
-    // my name sent to the server
-    var myName = false;
-
-    // if user is running mozilla then use it's built-in WebSocket
     window.WebSocket = window.WebSocket || window.MozWebSocket;
 
     // if browser doesn't support WebSocket, just show some notification and exit
@@ -24,13 +10,43 @@ $(function () {
         input.hide();
         newGame.attr('disabled', 'disabled');
         $('span').hide();
-        return;
+        
+    } else {
+
+        // open connection
+        var connection = new WebSocket('ws://127.0.0.1:7175');
+
+
+        /**
+        * This method is optional. If the server wasn't able to respond to the
+        * in 3 seconds then show some error message to notify the user that
+        * something is wrong.
+        */
+        setInterval(function() {
+            if (connection.readyState !== 1) {
+                status.text('Error');
+                input.attr('disabled', 'disabled').val('Unable to comminucate '
+                                                     + 'with the WebSocket server.');
+                newGame.attr('disabled', 'disabled');
+            }
+        }, 3000);
     }
+    
+    // for better performance - to avoid searching in DOM
+    var chatContent = $('#chat');
+    var games = $('#games');
+    var input = $('#input');
+    var newGame = $('#newGame');
+    var status = $('#status');
+    var nameField = $('#nameField');
+ 
 
-    // open connection
-    var connection = new WebSocket('ws://127.0.0.1:7175');
+    // my color assigned by the server
+    var myColor = false;
+    // my name sent to the server
+    var myName = false;
 
-    connection.onopen = function () {
+        connection.onopen = function () {
         // first we want users to enter their names
         input.removeAttr('disabled');
         newGame.attr('disabled', 'disabled');
@@ -59,7 +75,8 @@ $(function () {
         // check the server source code above
         if (json.type === 'color') { // first response from the server with user's color
             myColor = json.data;
-            status.text(myName + ': ').css('color', myColor);
+            status.text("");
+            nameField.text(myName + ': ').css('color', myColor);
             input.removeAttr('disabled').focus();
             newGame.removeAttr('disabled');
             // from now user can start sending messages
@@ -126,20 +143,6 @@ $(function () {
     
 
     /**
-* This method is optional. If the server wasn't able to respond to the
-* in 3 seconds then show some error message to notify the user that
-* something is wrong.
-*/
-    setInterval(function() {
-        if (connection.readyState !== 1) {
-            status.text('Error');
-            input.attr('disabled', 'disabled').val('Unable to comminucate '
-                                                 + 'with the WebSocket server.');
-            newGame.attr('disabled', 'disabled');
-        }
-    }, 3000);
-
-    /**
 * Add message to the chat window
 */
     function addMessage(author, message, color, dt) {
@@ -162,3 +165,9 @@ $(function () {
     
     
 });
+
+    function join(id){
+            var newUrl = "Client.html?id=" + id;
+            window.location.replace(newUrl);
+        }
+        
