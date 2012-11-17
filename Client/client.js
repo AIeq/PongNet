@@ -296,36 +296,31 @@ Ball.prototype.collisionCheckedMove = function(move) {
             return;
         }
     }
-
+    this.position = move.position;
     if (p.y <= sY) {
         // collides lower border
         this.position.y = sY;
         this.speed.y = -this.speed.y;
+    } else if (p.y >= this.areaSize.y - sY) {
+        // collides upper border
+        this.position.y = this.areaSize.y - sY;
+        this.speed.y = -this.speed.y;
     } else if (p.x <= 0) {
         // collides left border
-        // TODO Goaaalll
-        this.position.x = p.x;
-        this.speed = {
-            x : 0,
-            y : 0
-        };
-    } else if (p.y + sY >= this.areaSize.y) {
-        // collides upper border
-        this.position.y = this.areaSize.y - sX;
-        this.speed.y = -this.speed.y;
+        this.goal(2);
     } else if (p.x >= this.areaSize.x) {
         // collides right border
-        // TODO Goaaalll
-        this.position.x = p.x;
-        this.speed = {
-            x : 0,
-            y : 0
-        };
-    } else {
-        this.position = move.position;
-    }
+        this.goal(1);
+    } 
 }
-
+Ball.prototype.goal = function(player){
+    // TODO Goaaalll
+    this.position.x = p.x;
+    this.speed = {
+        x : 0,
+        y : 0
+    };
+}
 Ball.prototype.collidePaddle = function(move, paddle, p, sX, sY) {
     var b = false;
     if (p.x < 100) {
