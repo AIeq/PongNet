@@ -36,27 +36,31 @@ Randroller.prototype.getNewValues = function(oldValues) {
 LocalController.prototype = new Controller();
 function LocalController(maxSpeed) {
     Controller.call(this, maxSpeed);
-    this.direction = 0;
+    this.up = 0;
+    this.down = 0;
+    this.dir = 0;
 }
 
 LocalController.prototype.getNewValues = function(oldValues) {
-     
-    var speed = this.direction * this.maxSpeed;
+    if(this.up + this.down < 2) this.dir = this.up - this.down;
+    var speed = this.dir * this.maxSpeed;
     return {
         position : oldValues.position,
         speed : speed
     };
 }
-LocalController.prototype.keydown = function(code) {
-  if(code == 38) { // up
-   this.direction = 1;
-  }
-  else if(code == 40) { // down
-    this.direction = -1;
-  }
-}
-LocalController.prototype.keyup = function(code) {
-   this.direction = 0;
+
+LocalController.prototype.setKey = function(code, val) {
+    switch(code) {
+        case 38:
+            this.up = val;
+            this.dir = 1;
+            break;
+        case 40:
+            this.down = val;
+            this.dir = -1;
+            break;
+    }
 }
 
 function GameArea(size) {
@@ -93,11 +97,11 @@ function GameArea(size) {
     var player = new LocalController(100);
     
     $("body").keydown(function(e) {
-        player.keydown(e.keyCode);
+        player.setKey(e.keyCode, 1);
     });
     
     $("body").keyup(function(e) {
-        player.keyup(e.keyCode);
+        player.setKey(e.keyCode, 0);
     });
     
     // game objects
