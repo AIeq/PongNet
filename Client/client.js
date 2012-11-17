@@ -1,28 +1,38 @@
-﻿//var gameArea;
+﻿//! clones an object
+function clone(obj){
+    return $.extend(true, {}, obj);
+}
 
 // data types
-
 function GameArea(size) {
     this.size = size || {
         x : 600,
         y : 400
     };
+    this.center = {};
+    this.center.x = this.size.x / 2;
+    this.center.y = this.size.y / 2;
 
     // camera, scene and renderer
     // camera : fov, aspect, near, far
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+    this.camera.position.x += this.center.x;
+    this.camera.position.y += this.center.y;
     this.camera.position.z = 300;
     this.scene = new THREE.Scene();
     this.renderer = new THREE.CanvasRenderer();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
 
     // game area
-    this.geometry = new THREE.CubeGeometry(this.size.x, this.size.y, 10);
+    this.geometry = new THREE.CubeGeometry(this.size.x, this.size.y, 50);
     this.material = new THREE.MeshBasicMaterial({
         color : 0x0000ff,
-        wireframe : true
+        wireframe : true,
+        opacity : 0.5
     });
     this.mesh = new THREE.Mesh(this.geometry, this.material);
+    this.mesh.position.x += this.center.x;
+    this.mesh.position.y += this.center.y;
     this.scene.add(this.mesh);
 
     // game objects
@@ -32,7 +42,7 @@ function GameArea(size) {
     }), new Paddle({
         x : 595,
         y : 200
-    }), new Ball()];
+    }), new Ball(clone(this.center))];
 
     // get meshes
     for (var i = 0; i < this.gameObjects.length; ++i) {
@@ -49,7 +59,7 @@ GameArea.prototype = {
         }
         this.lastTime = time;
 
-        self = this;
+        var self = this;
         requestAnimationFrame(function(t) {
             self.animate(t);
         });
@@ -128,12 +138,17 @@ function Paddle(position, controller, size) {
 Paddle.prototype.setSize = function(size) {
     this.size = size;
 }
+//Paddle.prototype.animate = function(tick) {
+//    this.mesh.rotation.x += 0.005 * tick;
+//    this.mesh.rotation.y += 0.01 * tick;
+//}
 
 Ball.prototype = new GameObject();
 Ball.prototype.parent = GameObject.prototype;
 Ball.prototype.constructor = Ball();
-function Ball(radius) {
+function Ball(position, radius) {
     GameObject.call(this);
+    this.position = position;
     var r = 5 || radius;
     this.size = {
         x : r,
@@ -154,6 +169,7 @@ Ball.prototype.setRadius = function(radius) {
     this.size.y = radius;
 }
 Ball.prototype.animate = function(tick) {
+    this.parent.animate.call(this);
     this.mesh.rotation.x += 0.005 * tick;
     this.mesh.rotation.y += 0.01 * tick;
 }
