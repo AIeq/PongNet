@@ -33,6 +33,32 @@ Randroller.prototype.getNewValues = function(oldValues) {
         speed : speed
     };
 }
+LocalController.prototype = new Controller();
+function LocalController(maxSpeed) {
+    Controller.call(this, maxSpeed);
+    this.direction = 0;
+}
+
+LocalController.prototype.getNewValues = function(oldValues) {
+     
+    var speed = this.direction * this.maxSpeed;
+    return {
+        position : oldValues.position,
+        speed : speed
+    };
+}
+LocalController.prototype.keydown = function(code) {
+  if(code == 38) { // up
+   this.direction = 1;
+  }
+  else if(code == 40) { // down
+    this.direction = -1;
+  }
+}
+LocalController.prototype.keyup = function(code) {
+   this.direction = 0;
+}
+
 function GameArea(size) {
     this.size = size || {
         x : 600,
@@ -50,7 +76,7 @@ function GameArea(size) {
     this.camera.position.z = 300;
     this.scene = new THREE.Scene();
     this.renderer = new THREE.CanvasRenderer();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(window.innerWidth -20 , window.innerHeight -20);
 
     // game area
     this.geometry = new THREE.CubeGeometry(this.size.x, this.size.y, 70);
@@ -64,15 +90,27 @@ function GameArea(size) {
     this.mesh.position.x += this.center.x;
     this.mesh.position.y += this.center.y;
     this.scene.add(this.mesh);
-
+    var player = new LocalController(100);
+    
+    $("body").keydown(function(e) {
+        player.keydown(e.keyCode);
+    });
+    
+    $("body").keyup(function(e) {
+        player.keyup(e.keyCode);
+    });
+    
     // game objects
     this.gameObjects = [new Paddle({
         x : 5,
         y : 300
-    }, new Randroller(100)), new Paddle({
+    }, player), new Paddle({
         x : 595,
         y : 200
     }, new Randroller(100)), new Ball(clone(this.center))];
+    
+
+
 
     // get meshes
     for (var i = 0; i < this.gameObjects.length; ++i) {
@@ -190,7 +228,7 @@ Ball.prototype.parent = GameObject.prototype;
 function Ball(position, radius) {
     GameObject.call(this);
     this.position = position;
-    var r = 5 || radius;
+    var r = 10 || radius;
     this.size = {
         x : r,
         y : r
