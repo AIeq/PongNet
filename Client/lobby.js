@@ -1,6 +1,16 @@
 $(function () {
     "use strict";
 
+    //helpers
+var setObject = function(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+}
+
+var getObject = function(key) {
+    var value = localStorage.getItem(key);
+    return value && JSON.parse(value);
+}
+
     window.WebSocket = window.WebSocket || window.MozWebSocket;
 
     // if browser doesn't support WebSocket, just show some notification and exit
@@ -46,7 +56,7 @@ $(function () {
     // my name sent to the server
     var myName = false;
 
-        connection.onopen = function () {
+    connection.onopen = function () {
         // first we want users to enter their names
         input.removeAttr('disabled');
         newGame.attr('disabled', 'disabled');
@@ -83,8 +93,9 @@ $(function () {
         } else if (json.type === 'history') { // entire message history
             // insert every single message to the chat window
             for (var i=0; i < json.data.length; i++) {
+                    var msg = json.data[i].text;
                     if(msg.indexOf("*") != 0){
-                        addMessage(json.data[i].author, json.data[i].text,
+                        addMessage(json.data[i].author, msg,
                                    json.data[i].color, new Date(json.data[i].time));
                     }
             }
@@ -155,7 +166,8 @@ $(function () {
     
    /** Add game  */
     function addGame(author, message, color, id) {
-
+        
+        localStorage.setItem("name", author);
         games.append('<span>Pong Game with <span style="color:' + color + '">' + author + '</span> '
              + ' <input TYPE="button" style="width: 8em;"  VALUE="Join now" onClick="join('+id+')"> <br/></span>');
  
