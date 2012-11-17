@@ -130,6 +130,22 @@ function GameArea(size) {
     for (var i = 0; i < this.gameObjects.length; ++i) {
         this.scene.add(this.gameObjects[i].getMesh());
     }
+
+    // text
+    var OPTIONS = {
+        size : 100,
+        height : 5,
+        font : "helvetiker",
+        weight : "bold"
+    };
+
+    var text = new THREE.TextGeometry("test", OPTIONS);
+    var wrapper = new THREE.MeshNormalMaterial({color: 0xffffff});
+
+    var words = new THREE.Mesh(text, wrapper);
+    words.position.x = -300;
+    words.position.y = 300;
+    this.scene.add(words);
 }
 
 GameArea.prototype = {
@@ -311,9 +327,9 @@ Ball.prototype.collisionCheckedMove = function(move) {
     } else if (p.x >= this.areaSize.x) {
         // collides right border
         this.goal(1);
-    } 
+    }
 }
-Ball.prototype.goal = function(player){
+Ball.prototype.goal = function(player) {
     // TODO Goaaalll
     this.speed = {
         x : 0,
@@ -321,7 +337,7 @@ Ball.prototype.goal = function(player){
     };
 }
 Ball.prototype.collidePaddle = function(move, paddle, p, sX, sY) {
-    if(move.speed.x == 0 && move.speed.y == 0){
+    if (move.speed.x == 0 && move.speed.y == 0) {
         return false;
     }
     var b = false;
@@ -355,6 +371,7 @@ Ball.prototype.collidePaddle = function(move, paddle, p, sX, sY) {
 function init() {
 
     var canvas = document.createElement("canvas");
+
     if (canvas.getContext) {
         // Hide the "Warning: could not load ...."
         document.getElementById('contentDiv').innerHTML = "";
