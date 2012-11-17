@@ -55,7 +55,7 @@ function GameArea(size) {
     // game area
     this.geometry = new THREE.CubeGeometry(this.size.x, this.size.y, 70);
     this.material = new THREE.MeshBasicMaterial({
-        color : 0x0000ff,
+        color : 0x00f00f,
         wireframe : true
     });
     this.material.side = THREE.DoubleSide;
@@ -89,16 +89,16 @@ GameArea.prototype = {
         }
         this.lastTime = time;
 
-        var self = this;
-        requestAnimationFrame(function(t) {
-            self.animate(t);
-        });
-
         for (var i = 0; i < this.gameObjects.length; ++i) {
             this.gameObjects[i].animate(tick);
         }
         this.renderer.render(this.scene, this.camera);
-
+        
+        // calls for a next update when possible
+        var self = this;
+        requestAnimationFrame(function(t) {
+            self.animate(t);
+        });
     },
     update : function(command) {
 
