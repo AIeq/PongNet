@@ -44,7 +44,7 @@ var server = http.createServer(function(req, res) {
         if(uri == "/") {
             uri += defaultFile;
         }
-        var filename = path.join(process.cwd(), "../client/" + uri);
+        var filename = path.join(process.cwd(), "../Client/" + uri);
 
         fs.exists(filename, function(exists) {
          
